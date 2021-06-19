@@ -1,18 +1,6 @@
 const pgp = require('pg-promise')();
 const db = pgp(`postgres://postgres:postgres@localhost:5433/cocktail-db`)
 
-var test_func = () => {
-        return new Promise((resolve, reject) => {
-            db.any(`SELECT * FROM public.cocktail`)
-                .then((data) => {
-                    resolve(data);
-                })
-                .catch((err) => {
-                    reject(err);
-                })
-        })
-    }
-
 var get_cocktail = (cocktail) => {
     return new Promise((resolve, reject) => {
         db.one(`SELECT id 
@@ -38,9 +26,13 @@ var get_cocktail = (cocktail) => {
     })
 }
 
-var submit_new_cocktail = (recipe) => {
+var create_cocktail = (recipe) => {
+
+}
+
+var delete_cocktail = (cocktail) => {
 
 }
 
 
-module.exports = {test_func, get_cocktail, submit_new_cocktail};
+module.exports = {get_cocktail, create_cocktail};
