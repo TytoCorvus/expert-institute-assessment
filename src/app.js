@@ -1,7 +1,7 @@
 const express = require('express')
 const { URL } = require('url')
 const app = express()
-const {test_func, get_cocktail} = require('./dao/postgres-dao')
+const {get_recipe, create_cocktail} = require('./dao/postgres-dao')
 
 app.get('/', (req, res, next) => {
     res.write("Hello, World!");
@@ -16,13 +16,25 @@ app.get('/other', (req, res, next) => {
 app.get('/cocktail', (req, res, next) => {
     const provided_url = new URL(req.url, `http://${req.headers.host}`)
     const cocktail = provided_url.searchParams.get('name')
-    get_cocktail(cocktail.toLowerCase())
+    get_recipe(cocktail.toLowerCase())
     .then((data) => {
-        res.write("Cocktail data:\n")
         res.write(JSON.stringify(data))
         res.send()
     })
     .catch((err) => {
+        next(err, req, res)
+    })
+})
+
+app.put('/cocktail', (req, res, next) => {
+    //const cocktail = JSON.parse(req.body)
+    console.log(`body: ` + req.body)
+    create_cocktail({name: "kamikaze"})
+    .then( data => {
+        res.write(`${cocktail.name} created successfully!`)
+        res.send();
+    })
+    .catch( err => {
         next(err, req, res)
     })
 })
