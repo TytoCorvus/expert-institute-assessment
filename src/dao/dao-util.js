@@ -1,8 +1,11 @@
 module.exports.buildRecipe = (cocktail_id, ingredient_array) => {
-    if(typeof ingredient_array != 'Array'){
-        return ''
+    if(!Array.isArray(ingredient_array)){
+        return null
     }
-    return ingredient_array.map( ingredient => {
-        `(${cocktail_id},'${ingredient.ingredient}','${ingredient.unit}',${ingredient.amount})`
-    }).join(',\n')
+
+    const string_arr =  ingredient_array.map( ing => {
+        return `(${cocktail_id},'${ing.ingredient}','${ing.unit}',${ing.amount})`
+    })
+
+    return string_arr.join(',\n')
 }

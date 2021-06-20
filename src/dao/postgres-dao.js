@@ -39,16 +39,23 @@ var get_recipe = (cocktail) => {
     })
 }
 
-var create_cocktail = ({name, recipe_array}) => {
+//TODO sanitize inputs further, prevent ' from appearing, which would break the SQL
+var create_cocktail = ({name, recipe}) => {
     return new Promise((resolve, reject) => {        
-        db.any(`INSERT INTO public.cocktail (name)
-                VALUES ('${name}')`)
+        db.one(`INSERT INTO public.cocktail (name)
+                VALUES ('${name}')
+                RETURNING id`)
             .then( response => {
-                db.any(`INSERT INTO public.recipes (id, ingredient, unit, amount)\nVALUES ${dao_utils.buildRecipe(response.id, recipe_array)}`)
-                resolve(response);
+                db.any(`INSERT INTO public.recipe (cocktail_id, ingredient, unit, amount)\nVALUES ${dao_utils.buildRecipe(response.id, recipe)}`)
+                    .then( cocktail_data => {
+                        resolve(`${name} was created successfully`)
+                    })
+                    .catch( err => {
+                        reject('There was an issue creating the recipe')
+                    })
             })
             .catch( err => {
-                reject(err);
+                reject('There was an issue creating the cocktail - be sure a cocktail by this name does not already exist');
             })
 
     })
