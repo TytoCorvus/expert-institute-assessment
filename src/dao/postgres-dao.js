@@ -2,6 +2,8 @@ const pgp = require('pg-promise')();
 const dao_utils = require('./dao-util')
 const db = pgp(`postgres://postgres:postgres@localhost:5433/cocktail-db`)
 
+//TODO Use stored functions or procedures instead of SQL directly in code
+
 var get_cocktail = (cocktail) => {
     return new Promise((resolve, reject) => {
         db.one(`SELECT *

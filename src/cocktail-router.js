@@ -1,6 +1,6 @@
 const express = require('express')
 const { URL } = require('url')
-const {get_recipe, create_cocktail} = require('./dao/postgres-dao')
+const {get_recipe, create_cocktail, delete_cocktail} = require('./dao/postgres-dao')
 
 const router = express()
 
@@ -30,9 +30,18 @@ router.put('/cocktail', (req, res, next) => {
     })
 })
 
-router.delete('/cocktail', )
+router.delete('/cocktail', (req, res, next) => {
+    delete_cocktail(req.body.name)
+    .then( _ => {
+        res.write(`${req.body.name} successfully deleted`)
+        res.send();
+    })
+    .catch( err => {
+        next(err, req, res)
+    })
+})
 
-router.get('/search', (req, res) => {
+router.get('/search', (req, res, next) => {
 
 })
 
