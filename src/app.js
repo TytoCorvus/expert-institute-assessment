@@ -6,7 +6,7 @@ const initialize_db = require('./dao/initialize-db')
 
 const startup = () => {
     const app = require('./basic-router')
-    app.listen(process.env.PORT ? process.env.PORT : 500);
+    app.listen(process.env.app_port ? process.env.app_port : 500);
 }
 
 //Initialize the database to ensure the rest of the app runs as required
