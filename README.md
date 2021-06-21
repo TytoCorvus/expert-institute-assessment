@@ -26,6 +26,11 @@ DELETE '/cocktail' : deletes a cocktail by the specified name. Submit the cockta
 
 POST '/cocktail/update' : Updates the cocktail with the provided body - its structure is identical to the body required for PUT '/cocktail'
 
+POST '/search/name' : searches for cocktails whose names contain a matching string. For example, passing 'old' could return an 'Old Fashioned' and a 'Golden Dream'. Pass a body like so: {"name":"old"}
+
+POST '/search/ingredients' : searches for cocktails with recipes that contain all of the supplied ingredients. Pass an array of strings (ingredient names) to search - The following might return 'moscow mule' and 'lime drop martini':
+["vodka","lime juice"]
+
 
 USAGE:
     In order for this project to work, the user will need to have Node.js installed, as well as access to postgres. For the latter, either having a local copy of the instance of the dbms or a docker container should work fine. 

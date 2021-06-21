@@ -1,6 +1,7 @@
+const { json } = require('express')
 const express = require('express')
 const { URL } = require('url')
-const {get_recipe, create_cocktail, delete_cocktail, update_cocktail} = require('./dao/postgres-dao')
+const {get_recipe, create_cocktail, delete_cocktail, update_cocktail, search_for_ingredients, search_for_name} = require('./dao/postgres-dao')
 
 const router = express()
 
@@ -52,8 +53,26 @@ router.post('/cocktail/update', (req, res, next) => {
     })
 })
 
-router.get('/search', (req, res, next) => {
+router.post('/search/ingredients', (req, res, next) => {
+    search_for_ingredients(req.body)
+    .then( result => {
+        res.write(JSON.stringify(result))
+        res.send();
+    })
+    .catch( err =>
+        next(err, req, res)
+    )
+})
 
+router.post('/search/name', (req, res, next) => {
+    search_for_name(req.body.name)
+    .then( result => {
+        res.write(JSON.stringify(result))
+        res.send();
+    })
+    .catch( err =>
+        next(err, req, res)
+    )
 })
 
 module.exports = router;

@@ -18,3 +18,26 @@ test('build recipe SQL', t => {
 	const expected = `(1,'water','oz',1),\n(1,'sugar','cube',3)`
 	t.is(expected, dao_util.buildRecipe(1, ingredient_arr));
 })
+
+test('build multiple recipes from SQL result', t => {
+
+	const result_arr = [
+		{name: "screwdriver",
+		 ingredient: "vodka"},
+		{name: "screwdriver",
+		 ingredient: "orange juice"},
+		{name: "moscow mule",
+	     ingredient: "vodka"},
+		{name: "moscow mule",
+	     ingredient: "lime juice"},
+		{name: "moscow mule",
+	     ingredient: "ginger ale"}	 
+	]
+
+
+	const expected = [{name:'moscow mule', ingredient:{'ginger ale':true, 'lime juice':true, 'vodka': true}},
+					  {name:'screwdriver', ingredient:{'orange juice':true, 'vodka':true}}]
+	const actual = dao_util.buildCocktailFromRecipe(result_arr)
+
+	t.deepEqual(expected, actual);
+})

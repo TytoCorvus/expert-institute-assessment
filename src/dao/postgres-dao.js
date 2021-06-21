@@ -113,21 +113,60 @@ var update_cocktail = ({name, recipe}) => {
     })
 }
 
-var search_for_name = (({name}) => {
-    return db.any(`SELECT *
-                FROM public.cocktails
+var search_for_name = ((name) => {
+    return new Promise((resolve, reject) => {
+        db.any(`SELECT *
+                FROM public.cocktail
                 WHERE name LIKE '%${name}%'`)
+        .then( data => {
+            resolve(data)
+        })
+        .catch( err => {
+            reject(err);
+        })
+    })
 })
 
-var search_for_ingredients = (({ingredient_arr}) => {
+var search_for_ingredients = ((ingredients) => {
+    if(!ingredients || ingredients.length == 0){
+        return new Promise(( _ , reject) => {
+            reject(`Invalid ingredient array`);
+        })
+    }
+
     return new Promise((resolve, reject) => {
-        db.any(`SELECT r.*
+        db.any(`SELECT ctail.name
                 FROM recipe as r
                 JOIN cocktail as ctail ON r.cocktail_id=ctail.id
-                WHERE r.ingredient = ${ingredient_arr[0]}`)
+                WHERE r.ingredient = '${ingredients[0]}'`)
         .then( data => {
-            //TODO fix filtering
-            resolve(dao_utils.buildCocktailFromRecipe(data))
+            db.any(`SELECT ctail.name, r.ingredient
+                    FROM recipe as r
+                    JOIN cocktail as ctail ON r.cocktail_id=ctail.id
+                    WHERE ctail.name IN (${data.map( cocktail => {return "'" + cocktail.name + "'"}).join(',')})`)
+                    .then( cocktail_data => {
+                        const recipes = dao_utils.buildCocktailFromRecipe(cocktail_data)
+                        const filtered_recipes = []
+
+                        for(var recipe in recipes){
+                            var missing = false;
+                            for(var ingr in ingredients){
+                                console.log(JSON.stringify(recipes[recipe].ingredient))
+                                if(!recipes[recipe].ingredient[ingredients[ingr]]){
+                                    missing = true;
+                                    break;
+                                }
+                            }
+                            if(!missing){
+                                filtered_recipes.push(recipes[recipe])
+                            }
+                        }
+
+                        resolve(filtered_recipes)
+                    })
+                    .catch( err => {
+                        reject(`There was an issue with your search: ${JSON.stringify(err)}`)
+                    })
         })
         .catch(err => {
             reject(err)
@@ -135,31 +174,4 @@ var search_for_ingredients = (({ingredient_arr}) => {
     })
 })
 
-//TODO update search to allow more specs, sanitize, etc
-//Returns 
-var search_with_params = (options => {
-    if(options == null || options == {}){
-        //If search is provided without options, return nothing
-        return [];
-    }
-
-    var search_fn;
-
-    switch(options.type){
-        case "name":
-            search_fn = search_for_name;
-            break;
-        case "ingredient":
-            if(!options.params || options.params.length < 1){
-                return []
-            }
-            search_fn = search_for_ingredients;
-            break;
-    }
-
-    search_fn(options)
-
-})
-
-
-module.exports = {get_cocktail, get_recipe, create_cocktail, delete_cocktail, update_cocktail, search_with_params};
+module.exports = {get_cocktail, get_recipe, create_cocktail, delete_cocktail, update_cocktail, search_for_ingredients, search_for_name};
