@@ -1,6 +1,8 @@
 const pgp = require('pg-promise')();
 const dao_utils = require('./dao-util')
-const db = pgp(`postgres://postgres:postgres@localhost:5433/cocktail-db`)
+
+const {db_host, db_user, db_pass, db_port} = process.env
+const db = pgp(`postgres://${db_user}:${db_pass}@${db_host}:${db_port}/cocktail-db`)
 
 //TODO Use stored functions or procedures instead of SQL directly in code
 
@@ -53,6 +55,7 @@ var create_cocktail = ({name, recipe}) => {
                         resolve(`${name} was created successfully`)
                     })
                     .catch( err => {
+                        console.log(JSON.stringify(err))
                         reject('There was an issue creating the recipe')
                     })
             })
@@ -61,7 +64,6 @@ var create_cocktail = ({name, recipe}) => {
             })
 
     })
-    
 }
 
 var delete_cocktail = (cocktail) => {
@@ -90,9 +92,74 @@ var delete_cocktail = (cocktail) => {
     })
 }
 
-var update_cocktail = () => {
-
+//TODO update this pattern - leaves the DB in an improper state if the create fails after the delete completes
+//Ideally, this would be a single transaction for the DB
+//Current iteration, this also changes the cocktail ID, which isn't desirable
+var update_cocktail = ({name, recipe}) => {
+    return new Promise( (resolve, reject) => {
+        delete_cocktail(name)
+        .then( data => {
+            create_cocktail({name, recipe})
+            .then( result => {
+                resolve(`${name} updated successfully`)
+            })
+            .catch( err => {
+                reject(err)
+            })
+        })
+        .catch(err => {
+            reject(err)
+        })
+    })
 }
 
+var search_for_name = (({name}) => {
+    return db.any(`SELECT *
+                FROM public.cocktails
+                WHERE name LIKE '%${name}%'`)
+})
 
-module.exports = {get_cocktail, get_recipe, create_cocktail, delete_cocktail};
+var search_for_ingredients = (({ingredient_arr}) => {
+    return new Promise((resolve, reject) => {
+        db.any(`SELECT r.*
+                FROM recipe as r
+                JOIN cocktail as ctail ON r.cocktail_id=ctail.id
+                WHERE r.ingredient = ${ingredient_arr[0]}`)
+        .then( data => {
+            //TODO fix filtering
+            resolve(dao_utils.buildCocktailFromRecipe(data))
+        })
+        .catch(err => {
+            reject(err)
+        })
+    })
+})
+
+//TODO update search to allow more specs, sanitize, etc
+//Returns 
+var search_with_params = (options => {
+    if(options == null || options == {}){
+        //If search is provided without options, return nothing
+        return [];
+    }
+
+    var search_fn;
+
+    switch(options.type){
+        case "name":
+            search_fn = search_for_name;
+            break;
+        case "ingredient":
+            if(!options.params || options.params.length < 1){
+                return []
+            }
+            search_fn = search_for_ingredients;
+            break;
+    }
+
+    search_fn(options)
+
+})
+
+
+module.exports = {get_cocktail, get_recipe, create_cocktail, delete_cocktail, update_cocktail, search_with_params};

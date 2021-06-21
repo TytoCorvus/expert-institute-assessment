@@ -1,26 +1,26 @@
-const express = require('express')
-const cocktail_router = require('./cocktail-router')
-const app = express()
+//Gather environment vars from .env file
+require('dotenv').config()
+const add_sample_cocktails = require('./dao/add-sample-cocktails')
 
-app.use(express.json());
-app.use(cocktail_router);
+const initialize_db = require('./dao/initialize-db')
 
-app.get('/', (req, res, next) => {
-    res.write("Hello, World!");
-    res.end();
-})
+const startup = () => {
+    const app = require('./basic-router')
+    app.listen(process.env.PORT ? process.env.PORT : 500);
+}
 
-app.use(function (err, req, res, next) {
-    if(!err){
-        next()
-    } else {
-        res.write(JSON.stringify(err))
-        res.status(500).send()
-    }
-  })
+//Initialize the database to ensure the rest of the app runs as required
+if(process.env.create_db.toLowerCase() == 'true'){
+    initialize_db()
+    .then( response => {
+        startup()
+        //add_sample_cocktails()
+    })
+    .catch( err => {
+        console.log(JSON.stringify(err));
+        console.log(`There was an issue initializing the database - closing app.`)
+    })
+} else {
+    startup()
+}
 
-app.use(function (req, res, next) {
-    res.status(404).send("We couldn't find the resource you were looking for :(")
-  })
-
-app.listen(500);

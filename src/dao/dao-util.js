@@ -9,3 +9,11 @@ module.exports.buildRecipe = (cocktail_id, ingredient_array) => {
 
     return string_arr.join(',\n')
 }
+
+module.exports.buildCocktailFromRecipe = sql_result_array => {
+    
+}
+
+module.exports.paginateResult =  result_array => {
+
+}
